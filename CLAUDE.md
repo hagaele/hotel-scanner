@@ -45,9 +45,11 @@ Plano do Firebase: **Blaze** (obrigatório para funções agendadas). 🛑 O usu
 
 ```
 /app                  # Expo (React Native + web)
-  app/                # rotas do Expo Router: (auth)/login, (main)/index, hotel/[id], admin/saude
+  src/app/            # rotas do Expo Router: (tabs)/index, (tabs)/destaques, (tabs)/conta, hotel/[id]; depois (auth)/login e admin/saude
   src/components/     # HotelCard, PriceRow, LineChart, StatusBadge...
   src/lib/            # firebase.ts, queries, formatação (moeda, datas), regras de estado
+  src/data/           # dados de exemplo e hook useHotels (ponto único de acesso aos dados)
+  src/theme/          # cores, espaçamentos e tipografia (identidade HOFIX)
 /functions            # Cloud Functions (TypeScript)
   src/collector/      # agendamento, scraper, parser, gravação
   src/admin/          # (opcional) função para "coletar agora" restrita a admin
