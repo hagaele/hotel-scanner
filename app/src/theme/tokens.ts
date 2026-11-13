@@ -69,5 +69,8 @@ export const fontSize = {
   min: 12,
 } as const;
 
+// Telas de formulário (login): largura máxima no tablet/web e tamanho do símbolo da marca.
+export const layout = { formMaxWidth: 480, logoSize: 64 } as const;
+
 // Largura a partir da qual a lista vira grade (tablet e web).
 export const breakpoints = { twoColumns: 700, threeColumns: 1100 } as const;
