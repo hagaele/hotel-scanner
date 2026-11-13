@@ -1,7 +1,10 @@
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { router } from 'expo-router';
+
 import { AppText } from '@/components/AppText';
+import { Button } from '@/components/Button';
 import { HotelList } from '@/components/HotelList';
 import { SegmentedFilter } from '@/components/SegmentedFilter';
 import { StateView } from '@/components/StateView';
@@ -28,6 +31,17 @@ export default function PainelScreen() {
 
   if (loading) return <StateView kind="loading" />;
   if (error) return <StateView kind="error" message={error} />;
+  if (hotels.length === 0) {
+    return (
+      <View style={styles.empty}>
+        <StateView
+          kind="empty"
+          message="Nenhum hotel cadastrado ainda. Cadastre o primeiro ou carregue os dados de exemplo na aba Conta."
+        />
+        <Button title="Cadastrar hotel" onPress={() => router.push('/hotel/novo')} />
+      </View>
+    );
+  }
 
   const lastCheck = hotels
     .map((h) => h.own.latest.checkedAt)
@@ -51,14 +65,17 @@ export default function PainelScreen() {
         <SummaryTile label="Em destaque" value={counts.highlighted} color={colors.text} />
       </View>
 
-      <SegmentedFilter
-        value={filter}
-        onChange={setFilter}
-        options={[
-          { value: 'all', label: 'Todos' },
-          { value: 'highlighted', label: 'Só em destaque' },
-        ]}
-      />
+      <View style={styles.toolbar}>
+        <SegmentedFilter
+          value={filter}
+          onChange={setFilter}
+          options={[
+            { value: 'all', label: 'Todos' },
+            { value: 'highlighted', label: 'Só em destaque' },
+          ]}
+        />
+        <Button title="+ Novo hotel" variant="secondary" onPress={() => router.push('/hotel/novo')} />
+      </View>
     </View>
   );
 
@@ -82,6 +99,8 @@ function SummaryTile(props: { label: string; value: number; color: string; symbo
 
 const styles = StyleSheet.create({
   header: { gap: spacing.lg, marginBottom: spacing.xs },
+  toolbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm, flexWrap: 'wrap' },
+  empty: { flex: 1, padding: spacing.xl, gap: spacing.lg, justifyContent: 'center' },
   summary: { flexDirection: 'row', gap: spacing.sm },
   tile: { flex: 1, borderWidth: 1, borderRadius: radius.md, padding: spacing.md, gap: 2 },
 });
