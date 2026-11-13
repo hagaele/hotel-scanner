@@ -67,6 +67,9 @@ function RootNavigator() {
         <Stack.Protected guard={isLoggedIn} redirectTo="/login">
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="hotel/[id]" options={{ title: 'Detalhe do hotel', headerBackTitle: 'Painel' }} />
+          <Stack.Screen name="hotel/novo" options={{ title: 'Novo hotel', headerBackTitle: 'Painel' }} />
+          <Stack.Screen name="hotel/editar/[id]" options={{ title: 'Editar hotel', headerBackTitle: 'Hotel' }} />
+          <Stack.Screen name="leitura/[id]" options={{ title: 'Registrar leitura', headerBackTitle: 'Hotel' }} />
         </Stack.Protected>
 
         <Stack.Protected guard={!isLoggedIn} redirectTo="/">
