@@ -1,5 +1,4 @@
-// Espelha o modelo de dados do Firestore descrito no CLAUDE.md (seção 3).
-// Hoje os dados vêm de src/data/mock.ts; a troca para o Firestore não muda estes tipos.
+// Tipos do app, espelhando o modelo de dados do Firestore (ver README, "Modelo de dados").
 
 export type CheckStatus = 'ok' | 'sold_out' | 'blocked' | 'failed';
 

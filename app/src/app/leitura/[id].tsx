@@ -6,15 +6,17 @@ import { AppText } from '@/components/AppText';
 import { Banner } from '@/components/Banner';
 import { Button } from '@/components/Button';
 import { ChoiceList } from '@/components/ChoiceList';
+import { DateTimeField } from '@/components/DateTimeField';
 import { SegmentedFilter } from '@/components/SegmentedFilter';
 import { StateView } from '@/components/StateView';
 import { TextField } from '@/components/TextField';
 import { useAuth } from '@/context/AuthContext';
 import { registerReading } from '@/data/hotelsRepository';
 import { useHotels } from '@/data/useHotels';
-import { formatBRL, formatTime } from '@/lib/format';
+import { formatBRL, formatDateTime, formatTime } from '@/lib/format';
 import { firestoreErrorMessage } from '@/lib/firestore';
-import { parsePriceInput, validateReadingPrice, type ReadingStatus } from '@/lib/readings';
+import { hapticError, hapticSuccess } from '@/lib/haptics';
+import { parsePriceInput, validateReadingDate, validateReadingPrice, type ReadingStatus } from '@/lib/readings';
 import { layout, radius, spacing } from '@/theme/tokens';
 import { useTheme } from '@/theme/useTheme';
 import type { Property } from '@/types';
@@ -31,8 +33,9 @@ function currentLabel(p: Property): string {
 
 /**
  * Registrar leitura de preço de uma propriedade do hotel (o próprio ou um concorrente).
- * Estados: propriedade escolhida, status, preço digitado, erro de validação, salvando,
- * sucesso e erro do servidor.
+ * Estados: propriedade escolhida, status, preço digitado, data e hora da leitura,
+ * erros de validação, salvando, sucesso e erro do servidor.
+ * Recursos nativos: seletor de data e hora do aparelho e resposta tátil (vibração).
  */
 export default function RegistrarLeituraScreen() {
   const { id, propriedade } = useLocalSearchParams<{ id: string; propriedade?: string }>();
@@ -44,6 +47,8 @@ export default function RegistrarLeituraScreen() {
   const [status, setStatus] = useState<ReadingStatus>('ok');
   const [priceText, setPriceText] = useState('');
   const [priceError, setPriceError] = useState<string | null>(null);
+  const [checkedAtDate, setCheckedAtDate] = useState(() => new Date());
+  const [dateError, setDateError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -68,24 +73,30 @@ export default function RegistrarLeituraScreen() {
     setSubmitted(true);
     resetFeedback();
     const validation = validateReadingPrice(status, priceText);
+    const dateValidation = validateReadingDate(checkedAtDate, new Date());
     setPriceError(validation);
-    if (validation) return;
+    setDateError(dateValidation);
+    if (validation || dateValidation) {
+      hapticError();
+      return;
+    }
 
-    // Nesta versão a leitura é registrada com o horário atual.
-    // (A escolha de data e hora entra na feature/nativos-readme, com o DateTimePicker.)
-    const checkedAt = new Date().toISOString();
+    // Data e hora escolhidas no seletor nativo (por padrão, o momento em que a tela abriu).
+    const checkedAt = checkedAtDate.toISOString();
     const price = status === 'ok' ? parsePriceInput(priceText) : null;
 
     setSaving(true);
     try {
       await registerReading(hotel!.id, selected.id, { status, price, checkedAt }, user?.uid);
       setSuccess(
-        `Leitura registrada: ${selected.name} — ${price !== null ? formatBRL(price) : STATUS_LABELS[status].toLowerCase()} às ${formatTime(checkedAt)}.`,
+        `Leitura registrada: ${selected.name} — ${price !== null ? formatBRL(price) : STATUS_LABELS[status].toLowerCase()} em ${formatDateTime(checkedAt)}.`,
       );
+      hapticSuccess();
       setPriceText('');
       setSubmitted(false);
     } catch (e) {
       setSaveError(firestoreErrorMessage(e));
+      hapticError();
     } finally {
       setSaving(false);
     }
@@ -152,6 +163,31 @@ export default function RegistrarLeituraScreen() {
                 : 'Não foi possível ver o preço. O último preço válido é mantido e aparece como desatualizado.'}
             </AppText>
           )}
+        </View>
+
+        <View style={[styles.block, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <DateTimeField
+            label="Data e hora da leitura"
+            value={checkedAtDate}
+            maximumDate={new Date()}
+            onChange={(value) => {
+              setCheckedAtDate(value);
+              resetFeedback();
+              setDateError(validateReadingDate(value, new Date()));
+            }}
+            error={dateError ?? undefined}
+            disabled={saving}
+          />
+          <Button
+            title="Usar a hora de agora"
+            variant="link"
+            onPress={() => {
+              setCheckedAtDate(new Date());
+              setDateError(null);
+              resetFeedback();
+            }}
+            disabled={saving}
+          />
         </View>
 
         {saveError && <Banner kind="error" message={saveError} />}

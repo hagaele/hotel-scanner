@@ -19,6 +19,10 @@ export const palette = {
     soldOut: '#5A4790',
     stale: '#5F6B67',
     error: '#B3261E',
+    // Linhas dos concorrentes no gráfico de 7 dias (o hotel próprio usa "primary").
+    series1: '#0B5F86',
+    series2: '#A0480A',
+    series3: '#5A4790',
   },
   dark: {
     background: '#0C1513',
@@ -37,6 +41,9 @@ export const palette = {
     soldOut: '#B9A9F2',
     stale: '#97A39F',
     error: '#FF8E84',
+    series1: '#6CC4EA',
+    series2: '#F3A35C',
+    series3: '#B9A9F2',
   },
 } as const;
 
@@ -70,7 +77,7 @@ export const fontSize = {
 } as const;
 
 // Telas de formulário (login): largura máxima no tablet/web e tamanho do símbolo da marca.
-export const layout = { formMaxWidth: 480, logoSize: 64 } as const;
+export const layout = { formMaxWidth: 480, logoSize: 64, chartHeight: 200 } as const;
 
 // Largura a partir da qual a lista vira grade (tablet e web).
 export const breakpoints = { twoColumns: 700, threeColumns: 1100 } as const;
