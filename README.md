@@ -37,6 +37,36 @@ O arquivo `.env` não vai para o Git. Sem ele o app mostra um aviso no terminal 
 - `src/app/_layout.tsx` protege as rotas com `Stack.Protected`: sem login só existe o grupo `(auth)` (`login` e `esqueci-senha`); com login, só as abas e o detalhe do hotel.
 - `src/lib/validation.ts` valida o formulário (e-mail e senha) e `src/lib/authErrors.ts` traduz os erros do Firebase para português.
 
+## Configurar o Firestore (hotéis e leituras)
+
+1. No Console do Firebase, abra **Firestore Database → Criar banco de dados**.
+2. Escolha o **modo de produção** e a região **`southamerica-east1` (São Paulo)**. A região não pode ser trocada depois.
+3. Na aba **Regras**, apague o conteúdo, cole o arquivo [`firestore.rules`](firestore.rules) deste repositório e clique em **Publicar**.
+4. Rode o app, entre com o usuário de teste e, na aba **Conta → Administração**, toque em **Carregar dados de exemplo**. Os 9 hotéis da Rede Litoral aparecem no Painel na hora.
+
+### Modelo de dados
+
+```
+clients/{clientId}                                nome do cliente e limite de destaque (%)
+clients/{clientId}/hotels/{hotelId}               ordem, hotel próprio e 3 concorrentes, cada um com o "latest"
+clients/{clientId}/hotels/{hotelId}/checks/{id}   histórico: uma leitura por documento, nunca sobrescrita
+```
+
+- O painel lê só os documentos de `hotels`, em tempo real (`onSnapshot`). Quem estiver com o app aberto vê um cadastro ou uma leitura nova na hora.
+- Cada leitura registrada cria um documento em `checks` e atualiza o `latest` da propriedade na mesma transação. `previousPrice` e `changedAt` só mudam quando o preço muda.
+- As regras só deixam usuários autenticados lerem e escreverem. Leituras do histórico não podem ser alteradas nem apagadas.
+
+### Onde está no código
+
+- `src/lib/firestore.ts`: conexão com o Firestore e mensagens de erro em português.
+- `src/data/paths.ts`: os caminhos das coleções.
+- `src/data/useHotels.ts`: leitura em tempo real. As telas usam só esse hook.
+- `src/data/hotelsRepository.ts`: cadastrar, editar, remover hotel e registrar leitura.
+- `src/data/seed.ts`: carga inicial dos dados de exemplo (pode rodar mais de uma vez; hotéis existentes não são alterados).
+- `src/lib/hotelForm.ts`: estado do formulário de hotel (`useReducer`) e validação.
+- `src/lib/readings.ts`: validação do preço e cálculo do `latest` a cada leitura.
+- Telas: `src/app/hotel/novo.tsx`, `src/app/hotel/editar/[id].tsx` e `src/app/leitura/[id].tsx`. Os botões de editar, remover e registrar leitura ficam no detalhe do hotel.
+
 ## Estrutura
 
 ```
@@ -45,7 +75,7 @@ app/                    Projeto Expo
   src/components/       Componentes reutilizáveis (HotelCard, PriceRow, StatusBadge...)
   src/lib/              Regras de preço, formatação, validação e configuração do Firebase
   src/context/          Estado global (AuthContext)
-  src/data/             Dados de exemplo e o hook useHotels (ponto único de acesso aos dados)
+  src/data/             Firestore: hook useHotels, operações de escrita e carga de exemplo
   src/theme/            Cores, espaçamentos e tipografia
 docs/                   Cronograma e briefing de identidade visual
 BRIEFING.md             Briefing do produto
