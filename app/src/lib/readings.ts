@@ -44,6 +44,19 @@ export function validateReadingPrice(status: ReadingStatus, priceText: string): 
   return null;
 }
 
+/** Leituras mais antigas que isso ficam fora do gráfico de 7 dias. */
+export const MAX_READING_AGE_DAYS = 7;
+
+/** Mensagem de erro da data e hora da leitura, ou null se estiver válida. */
+export function validateReadingDate(checkedAt: Date, now: Date): string | null {
+  if (Number.isNaN(checkedAt.getTime())) return 'Informe a data e a hora da leitura.';
+  // 1 minuto de folga para diferenças de relógio.
+  if (checkedAt.getTime() > now.getTime() + 60_000) return 'A leitura não pode ser no futuro.';
+  const ageDays = (now.getTime() - checkedAt.getTime()) / (24 * 60 * 60 * 1000);
+  if (ageDays > MAX_READING_AGE_DAYS) return `A leitura precisa ser dos últimos ${MAX_READING_AGE_DAYS} dias.`;
+  return null;
+}
+
 /**
  * Calcula o novo "latest" de uma propriedade depois de uma leitura.
  * - ok: grava o preço. previousPrice e changedAt só mudam quando o preço muda.

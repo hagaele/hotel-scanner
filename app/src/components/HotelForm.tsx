@@ -2,6 +2,7 @@ import { useReducer, type ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 import { firestoreErrorMessage } from '@/lib/firestore';
+import { hapticError, hapticSuccess } from '@/lib/haptics';
 import {
   hasFormErrors,
   hotelFormReducer,
@@ -39,13 +40,18 @@ export function HotelForm({ initialValues, submitLabel, successMessage, onSubmit
 
   async function handleSubmit() {
     dispatch({ type: 'submit' });
-    if (hasFormErrors(validateHotelForm(values))) return;
+    if (hasFormErrors(validateHotelForm(values))) {
+      hapticError();
+      return;
+    }
     dispatch({ type: 'saving' });
     try {
       await onSubmit(values);
       dispatch({ type: 'saved' });
+      hapticSuccess();
     } catch (e) {
       dispatch({ type: 'saveFailed', message: firestoreErrorMessage(e) });
+      hapticError();
     }
   }
 

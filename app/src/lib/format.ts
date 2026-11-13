@@ -33,3 +33,21 @@ export function formatTime(iso: string | Date): string {
 export function hourInBrt(date: Date): number {
   return toBrt(date).getUTCHours();
 }
+
+/** Dia e mês no fuso de Brasília: "13/11" */
+export function formatDayMonth(iso: string | Date): string {
+  const d = toBrt(typeof iso === 'string' ? new Date(iso) : iso);
+  const dd = String(d.getUTCDate()).padStart(2, '0');
+  const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+  return `${dd}/${mm}`;
+}
+
+/** Data e hora no fuso de Brasília: "13/11 às 14:00" */
+export function formatDateTime(iso: string | Date): string {
+  return `${formatDayMonth(iso)} às ${formatTime(iso)}`;
+}
+
+/** Chave do dia no fuso de Brasília ("2026-11-13"), para agrupar leituras por dia. */
+export function dayKeyBrt(date: Date): string {
+  return toBrt(date).toISOString().slice(0, 10);
+}
