@@ -1,6 +1,6 @@
 import { doc, getDocs, serverTimestamp, writeBatch } from 'firebase/firestore';
 
-import { db } from '@/lib/firestore';
+import { db, withTimeout } from '@/lib/firestore';
 import type { Hotel, Property } from '@/types';
 
 import { mockClient, mockHotels, MOCK_NOW } from './mock';
@@ -18,7 +18,7 @@ const HISTORY_DAYS = 6;
  * - Cada propriedade ganha um histórico de leituras dos últimos dias, usado pelo gráfico de 7 dias.
  */
 export async function seedExampleData(): Promise<{ created: number; skipped: number }> {
-  const existing = new Set((await getDocs(hotelsCol())).docs.map((d) => d.id));
+  const existing = new Set((await withTimeout(getDocs(hotelsCol()))).docs.map((d) => d.id));
   const offsetMs = Date.now() - MOCK_NOW.getTime();
   const shift = (iso: string | undefined | null) =>
     iso ? new Date(new Date(iso).getTime() + offsetMs).toISOString() : iso;
@@ -51,7 +51,7 @@ export async function seedExampleData(): Promise<{ created: number; skipped: num
     created++;
   }
 
-  await batch.commit();
+  await withTimeout(batch.commit());
   return { created, skipped: mockHotels.length - created };
 }
 

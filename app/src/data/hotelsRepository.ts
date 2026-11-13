@@ -1,7 +1,7 @@
 import { deleteDoc, doc, runTransaction, serverTimestamp, setDoc } from 'firebase/firestore';
 
 import type { HotelFormValues, PropertyFields } from '@/lib/hotelForm';
-import { db } from '@/lib/firestore';
+import { db, withTimeout } from '@/lib/firestore';
 import { applyReading, type Reading } from '@/lib/readings';
 import type { Hotel, LatestCheck, Property } from '@/types';
 
@@ -27,12 +27,12 @@ export function hotelToFormValues(hotel: Hotel): HotelFormValues {
 /** Cadastra um hotel novo com 3 concorrentes. Devolve o id criado. */
 export async function createHotel(values: HotelFormValues, order: number): Promise<string> {
   const ref = doc(hotelsCol());
-  await setDoc(ref, {
+  await withTimeout(setDoc(ref, {
     order,
     own: toProperty(ref.id, values.own),
     competitors: values.competitors.map((c, i) => toProperty(`${ref.id}-${i + 1}`, c)),
     createdAt: serverTimestamp(),
-  });
+  }));
   return ref.id;
 }
 
@@ -41,7 +41,7 @@ export async function createHotel(values: HotelFormValues, order: number): Promi
  * para o histórico de leituras continuar ligado à propriedade certa.
  */
 export async function updateHotel(hotelId: string, values: HotelFormValues): Promise<void> {
-  await runTransaction(db, async (tx) => {
+  await withTimeout(runTransaction(db, async (tx) => {
     const ref = hotelRef(hotelId);
     const snap = await tx.get(ref);
     if (!snap.exists()) throw Object.assign(new Error('Hotel não encontrado'), { code: 'not-found' });
@@ -58,7 +58,7 @@ export async function updateHotel(hotelId: string, values: HotelFormValues): Pro
       }),
       updatedAt: serverTimestamp(),
     });
-  });
+  }));
 }
 
 /**
@@ -67,7 +67,7 @@ export async function updateHotel(hotelId: string, values: HotelFormValues): Pro
  * Firestore não permitem apagar leituras, porque o histórico é o valor do produto.
  */
 export async function deleteHotel(hotelId: string): Promise<void> {
-  await deleteDoc(hotelRef(hotelId));
+  await withTimeout(deleteDoc(hotelRef(hotelId)));
 }
 
 /**
@@ -82,7 +82,7 @@ export async function registerReading(
   reading: Reading,
   userId: string | undefined,
 ): Promise<void> {
-  await runTransaction(db, async (tx) => {
+  await withTimeout(runTransaction(db, async (tx) => {
     const ref = hotelRef(hotelId);
     const snap = await tx.get(ref);
     if (!snap.exists()) throw Object.assign(new Error('Hotel não encontrado'), { code: 'not-found' });
@@ -107,5 +107,5 @@ export async function registerReading(
       createdBy: userId,
       createdAt: serverTimestamp(),
     });
-  });
+  }));
 }

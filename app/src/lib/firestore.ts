@@ -25,6 +25,25 @@ function createFirestore(): Firestore {
 
 export const db = createFirestore();
 
+/** Tempo máximo de espera por uma gravação ou consulta, em milissegundos. */
+const WRITE_TIMEOUT_MS = 15000;
+
+/**
+ * Limita o tempo de espera de uma operação do Firestore.
+ * Sem conexão, ou com o banco ainda não criado, o SDK guarda a operação numa fila
+ * e nunca responde. Com o limite, a tela mostra um erro em vez de carregar para sempre.
+ */
+export function withTimeout<T>(operation: Promise<T>, ms: number = WRITE_TIMEOUT_MS): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () => reject(Object.assign(new Error('Tempo esgotado'), { code: 'deadline-exceeded' })),
+      ms,
+    );
+  });
+  return Promise.race([operation, timeout]).finally(() => clearTimeout(timer));
+}
+
 /** Traduz os erros do Firestore para mensagens em português. */
 export function firestoreErrorMessage(error: unknown): string {
   const code = typeof error === 'object' && error !== null && 'code' in error ? String(error.code) : '';
@@ -38,7 +57,7 @@ export function firestoreErrorMessage(error: unknown): string {
     case 'failed-precondition':
       return 'O banco de dados ainda não foi criado no Firebase. Avise o administrador.';
     case 'deadline-exceeded':
-      return 'O servidor demorou para responder. Tente de novo.';
+      return 'O servidor não respondeu. Verifique sua internet e se o banco de dados foi criado no Firebase, e tente de novo.';
     default:
       return 'Não foi possível concluir. Tente novamente.';
   }
