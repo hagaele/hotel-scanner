@@ -1,0 +1,29 @@
+rules_version = '2';
+
+// Regras de segurança do Firestore do HOFIX.
+// Publicar: Console do Firebase > Firestore Database > Regras > colar este arquivo > Publicar.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Cliente (nome e limite de destaque): só usuário autenticado lê e escreve.
+    match /clients/{clientId} {
+      allow read, write: if request.auth != null;
+
+      // Hotéis próprios com seus concorrentes.
+      match /hotels/{hotelId} {
+        allow read, write: if request.auth != null;
+
+        // Histórico de leituras: pode ler e criar, mas nunca alterar nem apagar.
+        match /checks/{checkId} {
+          allow read, create: if request.auth != null;
+          allow update, delete: if false;
+        }
+      }
+    }
+
+    // Qualquer outro caminho fica bloqueado.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
