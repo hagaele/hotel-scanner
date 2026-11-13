@@ -1,20 +1,25 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/AppText';
 import { Banner } from '@/components/Banner';
 import { Button } from '@/components/Button';
 import { DiffChip } from '@/components/DiffChip';
+import { PriceHistoryChart } from '@/components/PriceHistoryChart';
 import { PriceRow } from '@/components/PriceRow';
 import { StateView } from '@/components/StateView';
 import { deleteHotel } from '@/data/hotelsRepository';
+import { useHotelHistory } from '@/data/useHotelHistory';
 import { useHotels } from '@/data/useHotels';
 import { confirmAction } from '@/lib/confirm';
 import { firestoreErrorMessage } from '@/lib/firestore';
 import { formatBRL } from '@/lib/format';
+import { hapticSuccess, hapticWarning } from '@/lib/haptics';
+import { buildHistoryChart } from '@/lib/history';
 import { diffPct, priceState, summarizeHotel } from '@/lib/pricing';
-import { spacing } from '@/theme/tokens';
+import { radius, spacing } from '@/theme/tokens';
+import { useTheme } from '@/theme/useTheme';
 
 /** Detalhe: o hotel próprio comparado, linha a linha, com cada concorrente. */
 export default function HotelDetailScreen() {
@@ -22,6 +27,15 @@ export default function HotelDetailScreen() {
   const { client, hotels, now, loading, error } = useHotels();
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const { colors } = useTheme();
+  const history = useHotelHistory(id);
+
+  // Recurso nativo: ao abrir um hotel em destaque, o aparelho dá um aviso tátil.
+  const current = hotels.find((h) => h.id === id);
+  const isHighlighted = current ? summarizeHotel(current, client.alertThresholdPct, now).highlighted : false;
+  useEffect(() => {
+    if (isHighlighted) hapticWarning();
+  }, [isHighlighted, id]);
 
   if (loading) return <StateView kind="loading" />;
   if (error) return <StateView kind="error" message={error} />;
@@ -32,6 +46,7 @@ export default function HotelDetailScreen() {
   const summary = summarizeHotel(hotel, client.alertThresholdPct, now);
   const ownState = priceState(hotel.own, now);
   const ownPrice = ownState === 'ok' ? hotel.own.latest.price : null;
+  const chart = buildHistoryChart(history.checks, hotel.own, hotel.competitors, now);
 
   async function handleDelete() {
     const confirmed = await confirmAction(
@@ -44,6 +59,7 @@ export default function HotelDetailScreen() {
     setDeleting(true);
     try {
       await deleteHotel(hotel!.id);
+      hapticSuccess();
       router.dismissTo('/');
     } catch (e) {
       setDeleteError(firestoreErrorMessage(e));
@@ -79,6 +95,26 @@ export default function HotelDetailScreen() {
         );
       })}
 
+      <View style={[styles.chartCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <AppText variant="title">Últimos 7 dias</AppText>
+        <AppText variant="caption" muted>
+          Último preço válido de cada dia.
+        </AppText>
+        {history.loading ? (
+          <AppText variant="caption" muted>
+            Carregando histórico...
+          </AppText>
+        ) : history.error ? (
+          <Banner kind="error" message={history.error} />
+        ) : chart.hasData ? (
+          <PriceHistoryChart data={chart} />
+        ) : (
+          <AppText variant="caption" muted>
+            Ainda não há leituras com preço nos últimos 7 dias. Registre uma leitura para começar o histórico.
+          </AppText>
+        )}
+      </View>
+
       <View style={styles.actions}>
         <Button
           title="Registrar leitura de preço"
@@ -101,5 +137,6 @@ export default function HotelDetailScreen() {
 const styles = StyleSheet.create({
   content: { padding: spacing.lg, gap: spacing.md, maxWidth: 720, width: '100%', alignSelf: 'center' },
   actions: { gap: spacing.sm, marginTop: spacing.md },
+  chartCard: { borderWidth: 1, borderRadius: radius.md, padding: spacing.lg, gap: spacing.sm },
   avgRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
 });

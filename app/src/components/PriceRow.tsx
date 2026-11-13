@@ -54,7 +54,14 @@ export function PriceRow({ property, state, own, diffVsOwn }: Props) {
               {formatBRL(price)}
             </AppText>
           )}
-          {diffVsOwn != null && <DiffChip pct={diffVsOwn} size="sm" />}
+          {diffVsOwn != null && (
+            <View style={styles.diffBlock}>
+              <DiffChip pct={diffVsOwn} size="sm" />
+              <AppText variant="caption" muted>
+                vs. seu hotel
+              </AppText>
+            </View>
+          )}
         </View>
       </View>
 
@@ -93,6 +100,7 @@ const styles = StyleSheet.create({
   top: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md },
   nameBlock: { flex: 1, gap: 2 },
   priceBlock: { alignItems: 'flex-end', gap: spacing.xs },
+  diffBlock: { alignItems: 'flex-end', gap: 2 },
   bottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' },
   link: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, minHeight: touchTarget },
 });
