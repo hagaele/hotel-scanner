@@ -25,11 +25,13 @@ export function TextField({ ref, label, error, password, style, onFocus, onBlur,
   const [focused, setFocused] = useState(false);
   const [hidden, setHidden] = useState(true);
 
-  const borderColor = error ? colors.error : focused ? colors.primary : colors.border;
+  const borderColor = error ? colors.error : focused ? colors.primary : colors.inputBorder;
 
   return (
     <View style={styles.wrapper}>
-      <AppText variant="label">{label}</AppText>
+      <AppText variant="caption" muted>
+        {label}
+      </AppText>
       <View style={[styles.inputRow, { borderColor, backgroundColor: colors.card }]}>
         <TextInput
           ref={ref}
@@ -78,7 +80,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderRadius: radius.md,
-    minHeight: touchTarget + 4,
+    minHeight: touchTarget,
   },
   input: {
     flex: 1,

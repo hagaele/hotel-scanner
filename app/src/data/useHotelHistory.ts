@@ -6,8 +6,11 @@ import { historyStart, type HistoryCheck } from '@/lib/history';
 
 import { checksCol } from './paths';
 
-/** Teto de leituras lidas por hotel. 4 propriedades x 7 dias cabem com muita folga. */
-const MAX_CHECKS = 400;
+/**
+ * Teto de leituras lidas por hotel. Cada dia de coleta traz também as tarifas das próximas datas
+ * (até 4 propriedades x 30 noites), por isso a folga.
+ */
+const MAX_CHECKS = 1500;
 
 type HotelHistory = {
   checks: HistoryCheck[];
@@ -57,5 +60,6 @@ function toCheck(data: Record<string, unknown>): HistoryCheck | null {
     status: typeof data.status === 'string' ? data.status : 'failed',
     price: typeof data.price === 'number' ? data.price : null,
     checkedAt: data.checkedAt,
+    stayDate: typeof data.stayDate === 'string' ? data.stayDate : undefined,
   };
 }

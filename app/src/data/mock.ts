@@ -1,6 +1,7 @@
-// Dados fictícios do briefing de design (Rede Litoral Hotéis, 14:00).
+// Dados fictícios do briefing de design (Rede Cerrado Hotéis, 14:00).
 // Servem para desenvolver as telas antes da integração com o Firestore.
 
+import { DEFAULT_ALERT_RULES } from '@/lib/alerts';
 import type { Client, Hotel, Property } from '@/types';
 
 /** "Agora" fixo do cenário de exemplo, para as telas serem reproduzíveis. */
@@ -21,59 +22,82 @@ function ok(name: string, price: number, extra: Partial<Property['latest']> = {}
 }
 
 export const mockClient: Client = {
-  id: 'rede-litoral',
-  name: 'Rede Litoral Hotéis',
+  id: 'rede-cerrado',
+  name: 'Rede Cerrado Hotéis',
   alertThresholdPct: 10,
+  alertRules: DEFAULT_ALERT_RULES,
 };
 
-const rows: { own: Property; competitors: Property[] }[] = [
+const BSB = 'Brasília/DF';
+const GYN = 'Goiânia/GO';
+const CLV = 'Caldas Novas/GO';
+
+const rows: { own: Property; competitors: Property[]; city: string; floorPrice: number }[] = [
   {
-    own: ok('Hotel Litoral Centro', 389),
-    competitors: [ok('Hotel Atlântico Plaza', 412), ok('Pousada Maré Alta', 365), ok('Hotel Farol', 398)],
+    own: ok('Hotel Cerrado Esplanada', 389),
+    competitors: [ok('Hotel Eixo Monumental', 412), ok('Hotel Asa Norte', 365), ok('Hotel Setor Hoteleiro Sul', 398)],
+    city: BSB,
+    floorPrice: 330,
   },
   {
-    own: ok('Litoral Praia Resort', 720, { previousPrice: 690, changedAt: at('11:00') }),
+    own: ok('Cerrado Thermas Resort', 720, { previousPrice: 690, changedAt: at('11:00') }),
     competitors: [
-      ok('Resort Costa Dourada', 610, { previousPrice: 650, changedAt: at('13:00') }),
-      ok('Hotel Sol Nascente', 585),
-      ok('Pousada Brisa', 640),
+      ok('Resort Águas Quentes', 610, { previousPrice: 650, changedAt: at('13:00') }),
+      ok('Hotel Termas do Lago', 585),
+      ok('Pousada Fonte Viva', 640),
     ],
+    city: CLV,
+    floorPrice: 600,
   },
   {
-    own: ok('Hotel Litoral Express', 219),
-    competitors: [ok('Ibis Orla', 259), ok('Hotel Rota 101', 248), ok('Pousada Caminho', 265)],
+    own: ok('Cerrado Express Brasília', 219),
+    competitors: [ok('Hotel Rodoviária Express', 259), ok('Hotel Via W3', 248), ok('Pousada Candangos', 265)],
+    city: BSB,
+    floorPrice: 190,
   },
   {
-    own: ok('Litoral Business', 455),
-    competitors: [ok('Hotel Executivo Sul', 470), ok('Plaza Negócios', 440), ok('Hotel Avenida', 462)],
+    own: ok('Cerrado Business', 455),
+    competitors: [ok('Hotel Executivo Planalto', 470), ok('Plaza Ministérios', 440), ok('Hotel Lago Paranoá', 462)],
+    city: BSB,
+    floorPrice: 390,
   },
   {
     own: {
-      id: slug('Pousada Litoral Verde'),
-      name: 'Pousada Litoral Verde',
+      id: slug('Cerrado Flat Marista'),
+      name: 'Cerrado Flat Marista',
       latest: { status: 'sold_out', price: null, checkedAt: at('14:00') },
     },
-    competitors: [ok('Pousada Mata Atlântica', 310), ok('Chalés da Serra', 295), ok('Pousada Recanto', 330)],
+    competitors: [ok('Flat Setor Oeste', 310), ok('Hotel Praça Cívica', 295), ok('Hotel Jardim Goiás', 330)],
+    city: GYN,
+    floorPrice: 260,
   },
   {
-    own: ok('Litoral Boutique', 610, { checkedAt: at('11:00') }),
-    competitors: [ok('Casa Azul Boutique', 590), ok('Hotel Arte', 640), ok('Villa Mar', 605)],
+    own: ok('Cerrado Boutique Goiânia', 610, { checkedAt: at('11:00') }),
+    competitors: [ok('Casa Ipê Boutique', 590), ok('Hotel Arte Bueno', 640), ok('Villa Flamboyant', 605)],
+    city: GYN,
+    floorPrice: 520,
   },
   {
-    own: ok('Hotel Litoral Norte', 340),
-    competitors: [ok('Hotel Enseada', 335), ok('Pousada do Porto', 352), ok('Hotel Pescador', 328)],
+    own: ok('Hotel Cerrado Termal', 340),
+    competitors: [ok('Hotel Lagoa Termal', 335), ok('Pousada Águas Claras', 352), ok('Hotel Serra de Caldas', 328)],
+    city: CLV,
+    floorPrice: 290,
   },
   {
-    own: ok('Litoral Suítes', 298),
-    competitors: [ok('Flat Mar', 285), ok('Hotel Mirante', 310), ok('Suítes Orla', 300)],
+    own: ok('Cerrado Suítes Goiânia', 298),
+    competitors: [ok('Flat Setor Sul', 285), ok('Hotel Mirante Goiânia', 310), ok('Suítes Av. T-63', 300)],
+    city: GYN,
+    floorPrice: 250,
   },
   {
     own: {
-      id: slug('Hotel Litoral Sul'),
-      name: 'Hotel Litoral Sul',
+      id: slug('Hotel Cerrado Parque das Águas'),
+      name: 'Hotel Cerrado Parque das Águas',
       latest: { status: 'failed', price: null, checkedAt: null },
     },
-    competitors: [ok('Hotel Pontal', 380), ok('Pousada Coqueiral', 360), ok('Hotel Baía', 395)],
+    competitors: [ok('Hotel Ipê Termas', 380), ok('Pousada Jardim das Águas', 360), ok('Hotel Mirante das Termas', 395)],
+    city: CLV,
+    floorPrice: 300,
   },
 ];
 

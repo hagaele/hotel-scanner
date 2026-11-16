@@ -47,7 +47,23 @@ export function formatDateTime(iso: string | Date): string {
   return `${formatDayMonth(iso)} às ${formatTime(iso)}`;
 }
 
+/** Data e hora completas no fuso de Brasília: "13/11/2026 às 14:00" */
+export function formatFullDateTime(iso: string | Date): string {
+  const d = toBrt(typeof iso === 'string' ? new Date(iso) : iso);
+  return `${formatDayMonth(iso)}/${d.getUTCFullYear()} às ${formatTime(iso)}`;
+}
+
+/** Preço sem centavos para rótulos curtos: 1234.5 -> "R$ 1.235" */
+export function formatBRLShort(value: number): string {
+  return formatBRL(Math.round(value)).replace(/,\d{2}$/, '');
+}
+
 /** Chave do dia no fuso de Brasília ("2026-11-13"), para agrupar leituras por dia. */
 export function dayKeyBrt(date: Date): string {
   return toBrt(date).toISOString().slice(0, 10);
+}
+
+/** "1 hotel", "2 hotéis", "0 hotéis". */
+export function plural(count: number, singular: string, pluralForm: string): string {
+  return `${count} ${count === 1 ? singular : pluralForm}`;
 }

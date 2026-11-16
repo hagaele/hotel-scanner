@@ -1,18 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, View } from 'react-native';
 
-import { radius, spacing } from '@/theme/tokens';
+import { radius, spacing, fonts } from '@/theme/tokens';
 import { useTheme } from '@/theme/useTheme';
 
 import { AppText } from './AppText';
 
-export type BadgeKind = 'highlight' | 'sold_out' | 'stale' | 'failed';
+export type BadgeKind = 'highlight' | 'sold_out' | 'stale' | 'failed' | 'none';
 
 const labels: Record<BadgeKind, string> = {
   highlight: 'Em destaque',
   sold_out: 'Esgotado',
   stale: 'Desatualizado',
   failed: 'Falha na leitura',
+  none: 'Sem leitura',
 };
 
 const icons: Record<BadgeKind, keyof typeof Ionicons.glyphMap> = {
@@ -20,13 +21,14 @@ const icons: Record<BadgeKind, keyof typeof Ionicons.glyphMap> = {
   sold_out: 'bed-outline',
   stale: 'time-outline',
   failed: 'warning-outline',
+  none: 'ellipse-outline',
 };
 
 /** Selo de status. Nunca depende só da cor: sempre traz ícone e texto. */
 export function StatusBadge({ kind }: { kind: BadgeKind }) {
   const { colors } = useTheme();
   const solid = kind === 'highlight';
-  const tone = { highlight: colors.highlightBg, sold_out: colors.soldOut, stale: colors.stale, failed: colors.error }[kind];
+  const tone = { highlight: colors.highlightBg, sold_out: colors.soldOut, stale: colors.stale, failed: colors.error, none: colors.textMuted }[kind];
   const foreground = solid ? colors.highlightText : tone;
 
   return (
@@ -49,5 +51,5 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     alignSelf: 'flex-start',
   },
-  text: { fontFamily: 'IBMPlexSans_600SemiBold' },
+  text: { fontFamily: fonts.semibold },
 });

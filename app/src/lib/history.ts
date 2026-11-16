@@ -14,6 +14,8 @@ export type HistoryCheck = {
   price: number | null;
   /** Data e hora da leitura (ISO 8601). */
   checkedAt: string;
+  /** Noite da estadia. Sem o campo, a leitura vale para o próprio dia (dados anteriores à data de estadia). */
+  stayDate?: string;
 };
 
 export type HistorySeries = {
@@ -52,7 +54,10 @@ export function buildHistoryChart(checks: HistoryCheck[], own: Property, competi
     if (check.status !== 'ok' || check.price === null) continue;
     const at = new Date(check.checkedAt).getTime();
     if (Number.isNaN(at)) continue;
-    const cell = `${check.propertyId}|${dayKeyBrt(new Date(at))}`;
+    const day = dayKeyBrt(new Date(at));
+    // O gráfico mostra o preço da noite do próprio dia; tarifas de datas futuras ficam no comparativo.
+    if (check.stayDate && check.stayDate !== day) continue;
+    const cell = `${check.propertyId}|${day}`;
     const current = latestByCell.get(cell);
     if (!current || at > current.at) latestByCell.set(cell, { price: check.price, at });
   }

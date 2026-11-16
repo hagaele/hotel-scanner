@@ -1,34 +1,49 @@
-import {
-  IBMPlexSans_400Regular,
-  IBMPlexSans_500Medium,
-  IBMPlexSans_600SemiBold,
-  IBMPlexSans_700Bold,
-  useFonts,
-} from '@expo-google-fonts/ibm-plex-sans';
+import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, useFonts } from '@expo-google-fonts/inter';
+import { SpaceGrotesk_600SemiBold, SpaceGrotesk_700Bold } from '@expo-google-fonts/space-grotesk';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
+import { AppErrorBoundary } from '@/components/AppErrorBoundary';
+import { ConfirmSheetProvider } from '@/components/ConfirmSheet';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { HotelsProvider } from '@/context/HotelsContext';
+import { ThemeProvider } from '@/context/ThemeContext';
 import { fonts } from '@/theme/tokens';
 import { useTheme } from '@/theme/useTheme';
 
 SplashScreen.preventAutoHideAsync();
 
-/** Raiz do app: o AuthProvider envolve tudo para qualquer tela saber quem está logado. */
+/**
+ * Raiz do app. Três estados globais (Context API) envolvem tudo:
+ * - ThemeProvider: tema claro, escuro ou o do aparelho;
+ * - ConfirmSheetProvider: confirmações em folha inferior (no lugar do alerta do sistema);
+ * - AuthProvider: quem está logado;
+ * - HotelsProvider: dados da rede em tempo real (hotéis, tarifas, eventos, alertas), compartilhados por todas as telas.
+ */
+/** Erro inesperado numa tela: mensagem em português e "Tentar de novo" no lugar da tela em branco. */
+export { AppErrorBoundary as ErrorBoundary };
+
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <RootNavigator />
-    </AuthProvider>
+    <ThemeProvider>
+      <ConfirmSheetProvider>
+        <AuthProvider>
+          <HotelsProvider>
+            <RootNavigator />
+          </HotelsProvider>
+        </AuthProvider>
+      </ConfirmSheetProvider>
+    </ThemeProvider>
   );
 }
 
 /**
  * Navegador raiz: uma pilha (Stack) com proteção de rotas.
  * - Sem login: só o grupo "(auth)" (login e esqueci-senha) existe. Qualquer outra rota volta para o login.
- * - Com login: só as abas "(tabs)" e o detalhe "hotel/[id]" existem.
+ * - Com login: o grupo "(tabs)": abas com uma pilha (Stack) em cada uma, onde entram as telas de detalhe,
+ *   comparativo e formulários (o menu continua visível). Ver src/app/(tabs)/_layout.tsx.
  * Quando o usuário entra ou sai, o Stack.Protected troca as telas sozinho
  * (redirectTo leva para o login ao sair e para o painel ao entrar).
  * A splash fica visível até as fontes carregarem e o Firebase dizer se já há sessão salva,
@@ -38,10 +53,12 @@ function RootNavigator() {
   const { colors, isDark } = useTheme();
   const { user, initializing } = useAuth();
   const [fontsLoaded, fontError] = useFonts({
-    IBMPlexSans_400Regular,
-    IBMPlexSans_500Medium,
-    IBMPlexSans_600SemiBold,
-    IBMPlexSans_700Bold,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+    SpaceGrotesk_600SemiBold,
+    SpaceGrotesk_700Bold,
   });
 
   const ready = (fontsLoaded || !!fontError) && !initializing;
@@ -59,17 +76,14 @@ function RootNavigator() {
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
-          headerStyle: { backgroundColor: colors.card },
-          headerTintColor: colors.text,
-          headerTitleStyle: { fontFamily: fonts.semibold },
+          // Barra superior escura, como no mockup.
+          headerStyle: { backgroundColor: colors.headerBg },
+          headerTintColor: colors.headerText,
+          headerTitleStyle: { fontFamily: fonts.displaySemibold },
           contentStyle: { backgroundColor: colors.background },
         }}>
         <Stack.Protected guard={isLoggedIn} redirectTo="/login">
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="hotel/[id]" options={{ title: 'Detalhe do hotel', headerBackTitle: 'Painel' }} />
-          <Stack.Screen name="hotel/novo" options={{ title: 'Novo hotel', headerBackTitle: 'Painel' }} />
-          <Stack.Screen name="hotel/editar/[id]" options={{ title: 'Editar hotel', headerBackTitle: 'Hotel' }} />
-          <Stack.Screen name="leitura/[id]" options={{ title: 'Registrar leitura', headerBackTitle: 'Hotel' }} />
         </Stack.Protected>
 
         <Stack.Protected guard={!isLoggedIn} redirectTo="/">

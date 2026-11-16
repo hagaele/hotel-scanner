@@ -12,25 +12,33 @@ function toInputValue(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+/** Date -> "2026-11-13", no horário local, que é o formato do campo de data do navegador. */
+function toDateValue(date: Date): string {
+  return toInputValue(date).slice(0, 10);
+}
+
 /**
  * Versão do campo de data e hora para o navegador.
  * O seletor nativo (DateTimePicker) só existe em Android e iPhone, então na web
  * usamos o campo de data e hora do próprio navegador.
  */
-export function DateTimeField({ label, value, onChange, maximumDate, error, disabled }: DateTimeFieldProps) {
+export function DateTimeField({ label, value, onChange, maximumDate, minimumDate, mode = 'datetime', error, disabled }: DateTimeFieldProps) {
+  const toValue = mode === 'date' ? toDateValue : toInputValue;
   const { colors, isDark } = useTheme();
 
   return (
     <View style={styles.field}>
       <AppText variant="label">{label}</AppText>
       <input
-        type="datetime-local"
+        type={mode === 'date' ? 'date' : 'datetime-local'}
         aria-label={label}
-        value={toInputValue(value)}
-        max={maximumDate ? toInputValue(maximumDate) : undefined}
+        value={toValue(value)}
+        max={maximumDate ? toValue(maximumDate) : undefined}
+        min={minimumDate ? toValue(minimumDate) : undefined}
         disabled={disabled}
         onChange={(event) => {
-          const picked = new Date(event.target.value);
+          // Só a data: meio-dia, para o dia não mudar por causa do fuso.
+          const picked = new Date(mode === 'date' ? `${event.target.value}T12:00:00` : event.target.value);
           if (!Number.isNaN(picked.getTime())) onChange(picked);
         }}
         style={{

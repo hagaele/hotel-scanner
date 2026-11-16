@@ -3,6 +3,7 @@ import { useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { LogoMark } from '@/components/AppHeader';
 import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
 import { TextField, type TextFieldRef } from '@/components/TextField';
@@ -55,10 +56,8 @@ export default function LoginScreen() {
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
-            <View style={[styles.logo, { backgroundColor: colors.brand }]}>
-              <AppText variant="titleLg" color={colors.accent}>
-                H
-              </AppText>
+            <View style={[styles.logo, { backgroundColor: colors.headerBg }]}>
+              <LogoMark size={36} color={colors.accent} />
             </View>
             <AppText variant="titleLg">HOFIX</AppText>
             <AppText muted style={styles.center}>
