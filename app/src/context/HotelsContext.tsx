@@ -10,6 +10,7 @@ import { holidayMap } from '@/lib/holidays';
 import { buildRateIndex, type RateIndex } from '@/lib/market';
 import { MAX_STAY_DAYS_AHEAD } from '@/lib/readings';
 import type {
+  AlertRules,
   CalendarEvent,
   CatalogFilters,
   CheckStatus,
@@ -47,6 +48,11 @@ type HotelsContextValue = {
   alerts: AlertItem[];
   readAlerts: Record<string, boolean>;
   unreadCount: number;
+  /**
+   * Aplica na tela as regras recém-salvas, sem esperar o retorno do Firestore. Se o "ouvinte" do cliente
+   * tiver caído (sem rede ou cota esgotada), o painel, a Conta e os Alertas já mostram o novo limite.
+   */
+  applyAlertRules: (rules: AlertRules) => void;
 };
 
 const HotelsContext = createContext<HotelsContextValue | null>(null);
@@ -229,6 +235,9 @@ export function HotelsProvider({ children }: { children: ReactNode }) {
   );
   const unreadCount = alerts.filter((a) => !readAlerts[a.id]).length;
 
+  const applyAlertRules = (rules: AlertRules) =>
+    setClient((c) => ({ ...c, alertRules: rules, alertThresholdPct: rules.outOfRangePct }));
+
   const value: HotelsContextValue = {
     client,
     hotels,
@@ -246,6 +255,7 @@ export function HotelsProvider({ children }: { children: ReactNode }) {
     alerts,
     readAlerts,
     unreadCount,
+    applyAlertRules,
   };
 
   return <HotelsContext.Provider value={value}>{children}</HotelsContext.Provider>;

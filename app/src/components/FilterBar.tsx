@@ -26,8 +26,10 @@ const MIN_WIDTH_PER_WEIGHT = 150;
  * Barra de filtros lado a lado, separados por barras verticais.
  * Em telas largas os filtros dividem a largura; no celular a barra rola de lado,
  * mantendo os filtros na horizontal em vez de empilhar.
+ * Com `stackOnNarrow`, no celular os itens ficam um embaixo do outro: use quando todos precisam
+ * estar à vista (ex.: regras de alerta), e não só os primeiros com o resto escondido na rolagem lateral.
  */
-export function FilterBar({ items }: { items: FilterBarItem[] }) {
+export function FilterBar({ items, stackOnNarrow = false }: { items: FilterBarItem[]; stackOnNarrow?: boolean }) {
   const { colors } = useTheme();
   const [width, setWidth] = useState(0);
   const totalWeight = items.reduce((sum, item) => sum + (item.weight ?? 1), 0);
@@ -52,10 +54,30 @@ export function FilterBar({ items }: { items: FilterBarItem[] }) {
     </View>
   );
 
+  const stacked = (
+    <View>
+      {items.map((item, i) => (
+        <View
+          key={item.key}
+          style={[styles.stackItem, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border }]}>
+          <AppText variant="label">{item.title}</AppText>
+          {item.control}
+          {item.hint ? (
+            <AppText variant="caption" muted>
+              {item.hint}
+            </AppText>
+          ) : null}
+        </View>
+      ))}
+    </View>
+  );
+
   return (
     <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
       {fits ? (
         row
+      ) : stackOnNarrow ? (
+        stacked
       ) : (
         <ScrollView horizontal showsHorizontalScrollIndicator contentContainerStyle={styles.scroll}>
           {row}
@@ -71,4 +93,5 @@ const styles = StyleSheet.create({
   item: { gap: spacing.sm, paddingHorizontal: spacing.md, justifyContent: 'flex-start' },
   first: { paddingLeft: 0 },
   divider: { width: 1, alignSelf: 'stretch' },
+  stackItem: { gap: spacing.sm, paddingVertical: spacing.md },
 });

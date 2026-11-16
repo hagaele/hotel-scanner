@@ -152,7 +152,8 @@ export function AppHeader() {
           onPress={() => router.navigate('/conta')}
           accessibilityRole="button"
           accessibilityLabel="Conta"
-          style={[styles.account, { backgroundColor: colors.headerActive }]}>
+          // Sem o texto "Conta" (celular), o fundo fica com a mesma folga dos dois lados do avatar.
+          style={[styles.account, !wide && styles.accountCompact, { backgroundColor: colors.headerActive }]}>
           <View style={[styles.avatar, { backgroundColor: colors.accent }]}>
             <AppText variant="label" color="#12161D" style={styles.navActive}>
               {initials}
@@ -191,5 +192,6 @@ const styles = StyleSheet.create({
   badge: { position: 'absolute', top: 4, right: 4, minWidth: 18, borderRadius: radius.pill, paddingHorizontal: 5, alignItems: 'center' },
   badgeText: { fontSize: 11, fontFamily: fonts.bold, lineHeight: 16 },
   account: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: touchTarget, borderRadius: radius.pill, paddingLeft: 4, paddingRight: spacing.md },
+  accountCompact: { paddingRight: 4 },
   avatar: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
 });

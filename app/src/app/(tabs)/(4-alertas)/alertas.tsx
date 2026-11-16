@@ -1,6 +1,6 @@
 import { plural } from '@/lib/format';
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { AlertCard } from '@/components/AlertCard';
@@ -37,7 +37,7 @@ type Feedback = { kind: 'success' | 'error'; message: string } | null;
  */
 export default function AlertasScreen() {
   const { user } = useAuth();
-  const { client, alerts, readAlerts, unreadCount, loading, error, ratesLoading } = useHotelsData();
+  const { client, alerts, readAlerts, unreadCount, loading, error, ratesLoading, applyAlertRules } = useHotelsData();
   const [filter, setFilter] = useState<AlertFilter>('all');
   const [feedback, setFeedback] = useState<Feedback>(null);
   const [rules, setRules] = useState<AlertRules>(client.alertRules);
@@ -46,9 +46,15 @@ export default function AlertasScreen() {
   const [rulesFeedback, setRulesFeedback] = useState<Feedback>(null);
 
   // Quando as regras salvas mudam (outro usuário, primeira carga), o formulário acompanha se não houver edição em curso.
+  // Só reage a uma mudança real das regras do servidor: terminar de salvar (rulesDirty → false) não pode
+  // devolver o formulário ao valor antigo enquanto o Firestore ainda não confirmou o novo.
+  const serverRulesKey = JSON.stringify(client.alertRules);
+  const lastServerRules = useRef(serverRulesKey);
   useEffect(() => {
-    if (!rulesDirty) setRules(client.alertRules);
-  }, [client.alertRules, rulesDirty]);
+    if (lastServerRules.current === serverRulesKey) return;
+    lastServerRules.current = serverRulesKey;
+    if (!rulesDirty) setRules(JSON.parse(serverRulesKey) as AlertRules);
+  }, [serverRulesKey, rulesDirty]);
 
   if (loading) return <StateView kind="loading" />;
   if (error) return <StateView kind="error" message={error} />;
@@ -85,6 +91,8 @@ export default function AlertasScreen() {
     setRulesFeedback(null);
     try {
       await saveAlertRules(rules);
+      applyAlertRules(rules);
+      lastServerRules.current = JSON.stringify(rules);
       hapticSuccess();
       setRulesDirty(false);
       setRulesFeedback({ kind: 'success', message: 'Regras salvas. A lista de alertas já foi atualizada.' });
@@ -105,6 +113,7 @@ export default function AlertasScreen() {
 
       <Card title="Regras de alerta" subtitle="Valem para todas as unidades da rede.">
         <FilterBar
+          stackOnNarrow
           items={[
             {
               key: 'mudanca',
