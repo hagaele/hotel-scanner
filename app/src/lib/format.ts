@@ -1,0 +1,69 @@
+// Formatação brasileira feita à mão, sem depender de Intl,
+// para o resultado ser idêntico em Android, iOS e web.
+
+const BRT_OFFSET_MS = -3 * 60 * 60 * 1000; // Brasília não tem horário de verão.
+
+function toBrt(date: Date): Date {
+  return new Date(date.getTime() + BRT_OFFSET_MS);
+}
+
+/** 1234.5 -> "R$ 1.234,50" */
+export function formatBRL(value: number): string {
+  const [int, dec] = Math.abs(value).toFixed(2).split('.');
+  const grouped = int.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return `${value < 0 ? '-' : ''}R$ ${grouped},${dec}`;
+}
+
+/** 17.72 -> "+17,7%" · -0.68 -> "−0,7%" */
+export function formatPct(value: number): string {
+  const rounded = Math.round(value * 10) / 10;
+  const sign = rounded > 0 ? '+' : rounded < 0 ? '−' : '';
+  return `${sign}${Math.abs(rounded).toFixed(1).replace('.', ',')}%`;
+}
+
+/** Hora no fuso de Brasília: "14:00" */
+export function formatTime(iso: string | Date): string {
+  const d = toBrt(typeof iso === 'string' ? new Date(iso) : iso);
+  const hh = String(d.getUTCHours()).padStart(2, '0');
+  const mm = String(d.getUTCMinutes()).padStart(2, '0');
+  return `${hh}:${mm}`;
+}
+
+/** Hora cheia (0 a 23) no fuso de Brasília. */
+export function hourInBrt(date: Date): number {
+  return toBrt(date).getUTCHours();
+}
+
+/** Dia e mês no fuso de Brasília: "13/11" */
+export function formatDayMonth(iso: string | Date): string {
+  const d = toBrt(typeof iso === 'string' ? new Date(iso) : iso);
+  const dd = String(d.getUTCDate()).padStart(2, '0');
+  const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+  return `${dd}/${mm}`;
+}
+
+/** Data e hora no fuso de Brasília: "13/11 às 14:00" */
+export function formatDateTime(iso: string | Date): string {
+  return `${formatDayMonth(iso)} às ${formatTime(iso)}`;
+}
+
+/** Data e hora completas no fuso de Brasília: "13/11/2026 às 14:00" */
+export function formatFullDateTime(iso: string | Date): string {
+  const d = toBrt(typeof iso === 'string' ? new Date(iso) : iso);
+  return `${formatDayMonth(iso)}/${d.getUTCFullYear()} às ${formatTime(iso)}`;
+}
+
+/** Preço sem centavos para rótulos curtos: 1234.5 -> "R$ 1.235" */
+export function formatBRLShort(value: number): string {
+  return formatBRL(Math.round(value)).replace(/,\d{2}$/, '');
+}
+
+/** Chave do dia no fuso de Brasília ("2026-11-13"), para agrupar leituras por dia. */
+export function dayKeyBrt(date: Date): string {
+  return toBrt(date).toISOString().slice(0, 10);
+}
+
+/** "1 hotel", "2 hotéis", "0 hotéis". */
+export function plural(count: number, singular: string, pluralForm: string): string {
+  return `${count} ${count === 1 ? singular : pluralForm}`;
+}
