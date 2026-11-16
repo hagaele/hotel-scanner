@@ -1,7 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 
 import { formatPct } from '@/lib/format';
-import { radius, spacing } from '@/theme/tokens';
+import { radius, spacing, fonts } from '@/theme/tokens';
 import { useTheme } from '@/theme/useTheme';
 
 import { AppText } from './AppText';
@@ -39,5 +39,5 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     alignSelf: 'flex-start',
   },
-  text: { fontFamily: 'IBMPlexSans_600SemiBold', fontVariant: ['tabular-nums'] },
+  text: { fontFamily: fonts.semibold, fontVariant: ['tabular-nums'] },
 });

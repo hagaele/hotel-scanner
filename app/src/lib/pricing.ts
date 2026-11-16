@@ -9,7 +9,8 @@ export const COLLECT_END_HOUR = 20;
 /** Sem leitura válida há mais que isso, dentro do horário de coleta, o preço é "desatualizado". */
 export const STALE_AFTER_MINUTES = 90;
 
-export type PriceState = 'ok' | 'sold_out' | 'stale' | 'failed';
+/** none = ainda não houve nenhuma leitura (hotel recém-cadastrado); failed = houve leitura, mas sem preço válido. */
+export type PriceState = 'ok' | 'sold_out' | 'stale' | 'failed' | 'none';
 
 export type Direction = 'above' | 'below' | 'equal';
 
@@ -35,7 +36,8 @@ export function isWithinCollectHours(now: Date): boolean {
 export function priceState(property: Property, now: Date): PriceState {
   const { status, price, checkedAt } = property.latest;
   if (status === 'sold_out') return 'sold_out';
-  if (price === null || checkedAt === null) return 'failed';
+  if (checkedAt === null) return price === null ? 'none' : 'failed';
+  if (price === null) return 'failed';
   if (status !== 'ok') return 'stale'; // falhou agora, mas existe um preço válido anterior
   const ageMin = (now.getTime() - new Date(checkedAt).getTime()) / 60000;
   if (isWithinCollectHours(now) && ageMin > STALE_AFTER_MINUTES) return 'stale';

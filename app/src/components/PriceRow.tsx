@@ -10,6 +10,7 @@ import type { Property } from '@/types';
 import { AppText } from './AppText';
 import { DiffChip } from './DiffChip';
 import { StatusBadge } from './StatusBadge';
+import { isSafeHttpsUrl } from '@/lib/hotelForm';
 
 type Props = {
   property: Property;
@@ -79,9 +80,12 @@ export function PriceRow({ property, state, own, diffVsOwn }: Props) {
             ? `${state === 'stale' ? 'Última leitura' : 'Verificado'} às ${formatTime(checkedAt)}`
             : 'Sem leitura hoje'}
         </AppText>
-        {property.bookingUrl && (
+        {isSafeHttpsUrl(property.bookingUrl) && (
           <Pressable
-            onPress={() => Linking.openURL(property.bookingUrl!)}
+            onPress={() => {
+              // Confere de novo na hora de abrir: o link pode ter sido gravado fora do app.
+              if (isSafeHttpsUrl(property.bookingUrl)) Linking.openURL(property.bookingUrl!);
+            }}
             accessibilityRole="link"
             style={styles.link}>
             <AppText variant="label" color={colors.primary}>
@@ -96,7 +100,7 @@ export function PriceRow({ property, state, own, diffVsOwn }: Props) {
 }
 
 const styles = StyleSheet.create({
-  row: { borderRadius: radius.md, padding: spacing.lg, gap: spacing.sm },
+  row: { borderRadius: radius.lg, padding: spacing.lg + 4, gap: spacing.sm },
   top: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md },
   nameBlock: { flex: 1, gap: 2 },
   priceBlock: { alignItems: 'flex-end', gap: spacing.xs },

@@ -1,4 +1,11 @@
-import { getFirestore, initializeFirestore, type Firestore } from 'firebase/firestore';
+import {
+  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  type Firestore,
+} from 'firebase/firestore';
+import { Platform } from 'react-native';
 
 import { firebaseApp } from './firebase';
 
@@ -7,17 +14,23 @@ import { firebaseApp } from './firebase';
  * Nesta entrega existe um cliente só. O modelo já separa os dados por cliente
  * (clients/{clientId}/...) para o produto atender outras redes no futuro.
  */
-export const CLIENT_ID = 'rede-litoral';
+export const CLIENT_ID = 'rede-cerrado';
 
 /**
  * Banco de dados Firestore.
  * ignoreUndefinedProperties: campos opcionais vazios (ex.: link não informado)
  * são simplesmente omitidos, em vez de gerar erro ao salvar.
  * O try/catch evita erro de "já inicializado" no recarregamento rápido do Expo.
+ * Na web, o cache persistente reduz as leituras cobradas a cada recarga da página.
  */
 function createFirestore(): Firestore {
   try {
-    return initializeFirestore(firebaseApp, { ignoreUndefinedProperties: true });
+    return initializeFirestore(firebaseApp, {
+      ignoreUndefinedProperties: true,
+      // Na web, guarda os documentos no navegador (IndexedDB): ao recarregar a página, os ouvintes
+      // retomam do cache e o Firestore só cobra o que mudou, poupando a cota diária de leituras.
+      ...(Platform.OS === 'web' ? { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) } : {}),
+    });
   } catch {
     return getFirestore(firebaseApp);
   }
@@ -58,6 +71,8 @@ export function firestoreErrorMessage(error: unknown): string {
       return 'O banco de dados ainda não foi criado no Firebase. Avise o administrador.';
     case 'deadline-exceeded':
       return 'O servidor não respondeu. Verifique sua internet e se o banco de dados foi criado no Firebase, e tente de novo.';
+    case 'resource-exhausted':
+      return 'A cota diária gratuita do Firebase acabou. Os dados voltam a ser gravados quando a cota renovar (à meia-noite do horário do Pacífico, por volta das 05:00 em Brasília) ou com o plano pago.';
     default:
       return 'Não foi possível concluir. Tente novamente.';
   }

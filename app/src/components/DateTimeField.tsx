@@ -1,7 +1,8 @@
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Platform, StyleSheet, View } from 'react-native';
 
-import { formatDateTime } from '@/lib/format';
+import { dayKeyBrt, formatDateTime } from '@/lib/format';
+import { formatKeyWithWeekday } from '@/lib/dates';
 import { hapticSelection } from '@/lib/haptics';
 import { spacing } from '@/theme/tokens';
 import { useTheme } from '@/theme/useTheme';
@@ -15,6 +16,10 @@ export type DateTimeFieldProps = {
   onChange: (value: Date) => void;
   /** Data mais recente permitida (ex.: agora, para não registrar leitura no futuro). */
   maximumDate?: Date;
+  /** Data mais antiga permitida (ex.: hoje, para a data de estadia). */
+  minimumDate?: Date;
+  /** 'date' escolhe só o dia; 'datetime' (padrão) escolhe dia e hora. */
+  mode?: 'date' | 'datetime';
   error?: string;
   disabled?: boolean;
 };
@@ -25,8 +30,9 @@ export type DateTimeFieldProps = {
  * - iPhone: mostra o seletor compacto do iOS na própria tela.
  * No navegador o arquivo usado é o DateTimeField.web.tsx.
  */
-export function DateTimeField({ label, value, onChange, maximumDate, error, disabled }: DateTimeFieldProps) {
+export function DateTimeField({ label, value, onChange, maximumDate, minimumDate, mode = 'datetime', error, disabled }: DateTimeFieldProps) {
   const { colors, isDark } = useTheme();
+  const display = mode === 'date' ? formatKeyWithWeekday(dayKeyBrt(value)) : formatDateTime(value);
 
   function handlePicked(picked: Date | undefined) {
     if (!picked) return;
@@ -34,12 +40,13 @@ export function DateTimeField({ label, value, onChange, maximumDate, error, disa
     onChange(picked);
   }
 
-  function openAndroid(mode: 'date' | 'time') {
+  function openAndroid(pickerMode: 'date' | 'time') {
     DateTimePickerAndroid.open({
       value,
-      mode,
+      mode: pickerMode,
       is24Hour: true,
-      maximumDate: mode === 'date' ? maximumDate : undefined,
+      maximumDate: pickerMode === 'date' ? maximumDate : undefined,
+      minimumDate: pickerMode === 'date' ? minimumDate : undefined,
       onValueChange: (_event, picked) => handlePicked(picked),
     });
   }
@@ -51,28 +58,31 @@ export function DateTimeField({ label, value, onChange, maximumDate, error, disa
       {Platform.OS === 'ios' ? (
         <DateTimePicker
           value={value}
-          mode="datetime"
+          mode={mode}
           display="compact"
           locale="pt-BR"
           themeVariant={isDark ? 'dark' : 'light'}
           accentColor={colors.primary}
           maximumDate={maximumDate}
+          minimumDate={minimumDate}
           disabled={disabled}
           onValueChange={(_event, picked) => handlePicked(picked)}
           style={styles.iosPicker}
         />
       ) : (
         <>
-          <AppText variant="title" accessibilityLabel={`Leitura em ${formatDateTime(value)}`}>
-            {formatDateTime(value)}
+          <AppText variant="title" accessibilityLabel={`${label}: ${display}`}>
+            {display}
           </AppText>
           <View style={styles.buttons}>
             <View style={styles.button}>
               <Button title="Alterar data" variant="secondary" onPress={() => openAndroid('date')} disabled={disabled} />
             </View>
-            <View style={styles.button}>
-              <Button title="Alterar hora" variant="secondary" onPress={() => openAndroid('time')} disabled={disabled} />
-            </View>
+            {mode === 'datetime' && (
+              <View style={styles.button}>
+                <Button title="Alterar hora" variant="secondary" onPress={() => openAndroid('time')} disabled={disabled} />
+              </View>
+            )}
           </View>
         </>
       )}

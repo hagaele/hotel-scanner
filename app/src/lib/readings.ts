@@ -11,9 +11,13 @@ export type Reading = {
   price: number | null;
   /** Data e hora da leitura (ISO 8601). */
   checkedAt: string;
+  /** Noite a que o preço se refere ("AAAA-MM-DD"). Hoje = preço do painel; datas futuras = comparativo e calendário. */
+  stayDate: string;
 };
 
 export const MAX_PRICE = 100_000;
+/** Diária abaixo disso quase sempre é erro de digitação (ex.: 1,90 no lugar de 190). */
+export const MIN_PRICE = 10;
 
 /**
  * Converte o texto digitado em número, no formato brasileiro:
@@ -40,6 +44,7 @@ export function validateReadingPrice(status: ReadingStatus, priceText: string): 
   const price = parsePriceInput(priceText);
   if (price === null) return 'Digite só números, como 389 ou 389,90.';
   if (price <= 0) return 'O preço precisa ser maior que zero.';
+  if (price < MIN_PRICE) return `Preço baixo demais (mínimo R$ ${MIN_PRICE}). Confira o valor digitado.`;
   if (price > MAX_PRICE) return 'Preço alto demais. Confira o valor digitado.';
   return null;
 }
@@ -54,6 +59,26 @@ export function validateReadingDate(checkedAt: Date, now: Date): string | null {
   if (checkedAt.getTime() > now.getTime() + 60_000) return 'A leitura não pode ser no futuro.';
   const ageDays = (now.getTime() - checkedAt.getTime()) / (24 * 60 * 60 * 1000);
   if (ageDays > MAX_READING_AGE_DAYS) return `A leitura precisa ser dos últimos ${MAX_READING_AGE_DAYS} dias.`;
+  return null;
+}
+
+/** Até quantos dias à frente uma tarifa pode ser registrada. */
+export const MAX_STAY_DAYS_AHEAD = 60;
+
+/** "AAAA-MM-DD" que existe no calendário (recusa 2026-02-30 e 2026-13-45). */
+export function isRealDateKey(key: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) return false;
+  const [y, m, d] = key.split('-').map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  return date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d;
+}
+
+/** Mensagem de erro da data de estadia, ou null se estiver válida. Datas como "AAAA-MM-DD". */
+export function validateStayDate(stayDate: string, today: string, maxDate: string): string | null {
+  if (!stayDate) return 'Informe a data da estadia.';
+  if (!isRealDateKey(stayDate)) return 'Essa data não existe. Escolha a noite no calendário.';
+  if (stayDate < today) return 'A data da estadia não pode ser no passado.';
+  if (stayDate > maxDate) return `Escolha uma data até ${MAX_STAY_DAYS_AHEAD} dias à frente.`;
   return null;
 }
 
