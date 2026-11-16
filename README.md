@@ -61,7 +61,22 @@ Os recursos nativos (vibração e seletor de data e hora do sistema) só aparece
 
 O app precisa de um projeto Firebase com **Authentication** e **Firestore**. As chaves ficam em `app/.env`, que não vai para o Git.
 
-**Para a avaliação:** o arquivo `.env` do projeto de teste da equipe e um usuário de teste (e-mail e senha) são enviados junto com a entrega, fora do repositório. Basta copiar o `.env` para a pasta `app/` e rodar.
+### Acesso para avaliação
+
+O projeto Firebase da equipe (`hofix-5aed6`) já está configurado e com os dados de exemplo da Rede Cerrado carregados.
+
+| Conta | E-mail |
+|---|---|
+| Professor | `professor@hofix.app` |
+| Freud | `freudcastelo@gmail.com` |
+| Sofia | `sofia@hofix.app` |
+| Hugo | `hugo@hofix.app` |
+| Matheus | `matheus@hofix.app` |
+
+- **Senha e arquivo `.env`:** são enviados ao professor junto com a entrega, fora do repositório. Como o repositório é público, senhas e chaves não ficam aqui.
+- **Para rodar:** copie o `.env` recebido para a pasta `app/`, siga [Como instalar e rodar](#como-instalar-e-rodar) e entre com `professor@hofix.app`.
+- **Preços do dia:** os preços ficam válidos por 90 minutos. Se o painel mostrar "Sem leitura" ou "—", toque em **Conta → Administração → Simular preços**.
+- **Contas novas:** a criação de contas pelo app está desligada (**Authentication → Configurações → Ações do usuário**). Contas novas só são criadas pelo Console do Firebase.
 
 **Para usar um projeto Firebase próprio:**
 
